@@ -8,36 +8,36 @@ import ReportsView from './components/views/ReportsView';
 import LoginView from './components/views/LoginView';
 import UserManagementView from './components/views/UserManagementView';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import api from './services/api';
 import './App.css';
 
-const MOCK_PRODUCTS = [
-  { id: 1, name: 'Canapé Scandinave', category: 'Salon', price: 350000, stock: 5, image: '🛋️', createdAt: '2024-02-01' },
-  { id: 2, name: 'Table Basse Bois', category: 'Salon', price: 75000, stock: 12, image: '🪵', createdAt: '2024-02-01' },
-  { id: 3, name: 'Lit Double Premium', category: 'Chambre', price: 550000, stock: 3, image: '🛏️', createdAt: '2024-02-02' },
-  { id: 4, name: 'Bureau de Travail', category: 'Bureau', price: 145000, stock: 8, image: '🖥️', createdAt: '2024-02-02' },
-  { id: 5, name: 'Armoire 3 Portes', category: 'Chambre', price: 275000, stock: 4, image: '👗', createdAt: '2024-02-03' },
-  { id: 6, name: 'Fauteuil Relax', category: 'Salon', price: 185000, stock: 6, image: '🪑', createdAt: '2024-02-03' },
-  { id: 7, name: 'Buffet Moderne', category: 'Salle à manger', price: 220000, stock: 2, image: '🍽️', createdAt: '2024-02-04' },
-  { id: 8, name: 'Lampe de Salon', category: 'Déco', price: 45000, stock: 20, image: '💡', createdAt: '2024-02-04' },
-];
-
 function AppContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const [productsData, salesData] = await Promise.all([
+        api.getProducts(),
+        api.getSales()
+      ]);
+      setProducts(productsData);
+      setSales(salesData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const savedProducts = localStorage.getItem('xshop_products');
-    const savedSales = localStorage.getItem('xshop_sales');
-    if (savedProducts) setProducts(JSON.parse(savedProducts));
-    if (savedSales) setSales(JSON.parse(savedSales));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('xshop_products', JSON.stringify(products));
-    localStorage.setItem('xshop_sales', JSON.stringify(sales));
-  }, [products, sales]);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   // Adjust view if current restricted
   useEffect(() => {
@@ -55,54 +55,56 @@ function AppContent() {
     }
   }, [user, currentView]);
 
+  if (authLoading) return <div className="loading-screen">Chargement...</div>;
+
   if (!user) {
     return <LoginView />;
   }
 
-  const addSale = (cartItems) => {
-    const newSale = {
-      id: Math.floor(100000 + Math.random() * 900000),
-      items: cartItems,
-      total: cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0),
-      timestamp: new Date().toISOString(),
-    };
+  const addSale = async (cartItems) => {
+    const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    try {
+      const newSale = await api.addSale({ items: cartItems, total });
+      setSales([newSale, ...sales]);
 
-    setSales([...sales, newSale]);
+      // Update local products stock
+      setProducts(products.map(p => {
+        const cartItem = cartItems.find(item => item.id === p.id);
+        if (cartItem) {
+          return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
+        }
+        return p;
+      }));
 
-    const updatedProducts = products.map(p => {
-      const cartItem = cartItems.find(item => item.id === p.id);
-      if (cartItem) {
-        return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
-      }
-      return p;
-    });
-    setProducts(updatedProducts);
-    return newSale; // Return to trigger receipt print
+      return newSale;
+    } catch (error) {
+      alert("Erreur lors de la validation de la vente");
+    }
   };
 
-  const addProduct = (productData) => {
-    const newProduct = {
-      ...productData,
-      id: Date.now(),
-      createdAt: new Date().toISOString().split('T')[0],
-      stock: parseInt(productData.stock)
-    };
+  const addProduct = async (productData) => {
+    const newProduct = await api.addProduct(productData);
     setProducts([...products, newProduct]);
   };
 
-  const updateProduct = (id, updatedData) => {
-    setProducts(products.map(p => p.id === id ? { ...p, ...updatedData } : p));
+  const updateProduct = async (id, updatedData) => {
+    const updated = await api.updateProduct(id, updatedData);
+    setProducts(products.map(p => p.id === id ? updated : p));
   };
 
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
+    await api.deleteProduct(id);
     setProducts(products.filter(p => p.id !== id));
   };
 
-  const updateStock = (productId, newStock) => {
-    setProducts(products.map(p => p.id === productId ? { ...p, stock: parseInt(newStock) || 0 } : p));
+  const updateStock = async (productId, newStock) => {
+    const updated = await api.updateProduct(productId, { stock: parseInt(newStock) || 0 });
+    setProducts(products.map(p => p.id === productId ? updated : p));
   };
 
   const renderView = () => {
+    if (loading) return <div>Chargement des données...</div>;
+
     switch (currentView) {
       case 'dashboard':
         return <DashboardView sales={sales} products={products} />;

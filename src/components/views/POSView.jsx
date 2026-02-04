@@ -49,11 +49,13 @@ const POSView = ({ products, addSale }) => {
 
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) return;
-    const sale = addSale(cart);
-    setRecentSale(sale);
-    setCart([]);
+    const sale = await addSale(cart);
+    if (sale) {
+      setRecentSale(sale);
+      setCart([]);
+    }
   };
 
   return (
@@ -94,7 +96,13 @@ const POSView = ({ products, addSale }) => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >
-              <div className="item-img-box">{product.image}</div>
+              <div className="item-img-box">
+                {product.photo ? (
+                  <img src={product.photo} alt={product.name} className="product-photo-img" />
+                ) : (
+                  product.image
+                )}
+              </div>
               <div className="item-details">
                 <h4 className="item-name">{product.name}</h4>
                 <div className="item-price-tag">
@@ -129,7 +137,11 @@ const POSView = ({ products, addSale }) => {
                 className="cart-row"
               >
                 <div className="cart-item-id">
-                  <span>{item.image}</span>
+                  {item.photo ? (
+                    <img src={item.photo} alt={item.name} className="product-photo-img" />
+                  ) : (
+                    <span>{item.image}</span>
+                  )}
                 </div>
                 <div className="cart-item-mid">
                   <p className="item-n">{item.name}</p>
@@ -264,6 +276,25 @@ const POSView = ({ products, addSale }) => {
           justify-content: center;
           font-size: 3rem;
           margin-bottom: 12px;
+          overflow: hidden;
+        }
+
+        .product-photo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .cart-item-id {
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
+          background: var(--bg-main);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          flex-shrink: 0;
         }
 
         .item-name { font-weight: 700; margin-bottom: 8px; font-size: 1rem; }

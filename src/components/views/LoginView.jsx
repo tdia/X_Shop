@@ -9,11 +9,10 @@ const LoginView = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (login(username, password)) {
-      setError('');
-    } else {
+    const success = await login(username, password);
+    if (!success) {
       setError('Identifiants incorrects');
     }
   };
