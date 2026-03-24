@@ -28,7 +28,10 @@ services:
       - db
 
   frontend:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5001/api}
     container_name: xshop-frontend
     restart: always
     ports:

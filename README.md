@@ -229,6 +229,53 @@ Reset complet DB :
 ```bash
 docker compose down -v
 docker compose up --build
+
+## Deploiement sur VPS (Ubuntu 24)
+
+Exemple pour un VPS avec IP publique.
+
+### 1) Connexion SSH
+
+```bash
+ssh administrator@<IP_VPS>
+```
+
+### 2) Installer Docker (si necessaire)
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### 3) Recuperer la branche de deploiement
+
+```bash
+git clone https://github.com/tdia/X_Shop.git
+cd X_Shop
+git checkout deploy
+```
+
+### 4) Definir l'URL API utilisee par le frontend
+
+```bash
+export VITE_API_URL="http://<IP_VPS>:5001/api"
+```
+
+### 5) Demarrer en production
+
+```bash
+docker compose up -d --build
+```
+
+### 6) Verifier
+
+```bash
+docker compose ps
+docker compose logs -f backend
+```
+
+Frontend:
+
+- `http://<IP_VPS>:8080`
 ```
 
 ## Notes
