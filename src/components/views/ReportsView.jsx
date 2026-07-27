@@ -14,7 +14,9 @@ import {
   Phone,
   Globe,
   Filter,
-  ArrowRight
+  ArrowRight,
+  Banknote,
+  X
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -22,7 +24,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ReportsView = ({ sales, products }) => {
+const ReportsView = ({ sales, products, updateSale }) => {
   const [reportRange, setReportRange] = useState('current_month'); // today, yesterday, current_month, last_month, current_year, last_year, custom
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -68,14 +70,36 @@ const ReportsView = ({ sales, products }) => {
     }
   };
 
+  const [paymentFilter, setPaymentFilter] = useState('all'); // all, paid, partial, pending
+  const [updatingSale, setUpdatingSale] = useState(null);
+  const [newInstallment, setNewInstallment] = useState('');
+
   const filteredSales = useMemo(() => {
     const { start, end } = getDateRange(reportRange);
-    if (!start || !end) return sales;
     return sales.filter(s => {
       const sDate = new Date(s.timestamp);
-      return sDate >= start && sDate <= end;
+      const matchesDate = !start || !end || (sDate >= start && sDate <= end);
+      const matchesPayment = paymentFilter === 'all' || s.paymentStatus === paymentFilter;
+      return matchesDate && matchesPayment;
     });
-  }, [sales, reportRange, customStart, customEnd]);
+  }, [sales, reportRange, customStart, customEnd, paymentFilter]);
+
+  const handleUpdatePayment = async (e) => {
+    e.preventDefault();
+    if (!updatingSale || !newInstallment) return;
+
+    const addedAmount = parseFloat(newInstallment);
+    const updatedPaid = (updatingSale.paidAmount || 0) + addedAmount;
+    const newStatus = updatedPaid >= updatingSale.total ? 'paid' : 'partial';
+
+    await updateSale(updatingSale.id, {
+      paidAmount: updatedPaid,
+      paymentStatus: newStatus
+    });
+
+    setUpdatingSale(null);
+    setNewInstallment('');
+  };
 
   const chartData = useMemo(() => {
     if (reportType === 'daily') {
@@ -99,7 +123,6 @@ const ReportsView = ({ sales, products }) => {
         };
       });
 
-      // If range is today/yesterday, we might want hourly, but for now lets keep daily
       return data;
     } else {
       // Group by month YYYY-MM
@@ -127,6 +150,7 @@ const ReportsView = ({ sales, products }) => {
   }, [filteredSales, reportType]);
 
   const totalPeriodRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
+  const totalPeriodPaid = filteredSales.reduce((acc, s) => acc + (s.paidAmount || s.total), 0);
   const totalPeriodOrders = filteredSales.length;
 
   const categoryData = useMemo(() => {
@@ -174,6 +198,10 @@ const ReportsView = ({ sales, products }) => {
                         tr:nth-child(even) { background: #f8fafc; }
                         .total-row { background: #f1f5f9 !important; font-weight: 800; }
                         .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+                        .badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 10px; }
+                        .paid { background: #d1fae5; color: #059669; }
+                        .partial { background: #fef3c7; color: #d97706; }
+                        .pending { background: #fee2e2; color: #dc2626; }
                     </style>
                 </head>
                 <body>
@@ -217,7 +245,7 @@ const ReportsView = ({ sales, products }) => {
           </div>
 
           <div className="report-title">
-            <h2>Rapport d'Activité Comparatif</h2>
+            <h2>Rapport d'Activité et Suivi des Impayés</h2>
             <div className="report-range">
               Période : {rangeLabels[reportRange]}
               {reportRange === 'custom' && ` (du ${new Date(customStart).toLocaleDateString()} au ${new Date(customEnd).toLocaleDateString()})`}
@@ -226,51 +254,51 @@ const ReportsView = ({ sales, products }) => {
 
           <div className="stats-grid">
             <div className="stat-card">
-              <span>Chiffre d'Affaires (TTC)</span>
+              <span>Chiffre d'Affaires Global</span>
               <h3>{totalPeriodRevenue.toLocaleString()} F CFA</h3>
             </div>
             <div className="stat-card">
-              <span>Part TVA (18%)</span>
-              <h3>{Math.round(totalPeriodRevenue - (totalPeriodRevenue / 1.18)).toLocaleString()} F CFA</h3>
+              <span>Total Encaissé</span>
+              <h3>{totalPeriodPaid.toLocaleString()} F CFA</h3>
             </div>
             <div className="stat-card">
-              <span>Volume de Ventes</span>
-              <h3>{totalPeriodOrders} Commandes</h3>
+              <span>Reste à Recouvrer</span>
+              <h3>{(totalPeriodRevenue - totalPeriodPaid).toLocaleString()} F CFA</h3>
             </div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th>PÉRIODE</th>
-                <th>NBRE VENTES</th>
-                <th>TOTAL TTC</th>
-                <th>DONT TVA (18%)</th>
-                <th>NET HT</th>
+                <th>CLIENT / DATE</th>
+                <th style={{ textAlign: 'right' }}>TOTAL</th>
+                <th style={{ textAlign: 'right' }}>PAYÉ</th>
+                <th style={{ textAlign: 'right' }}>RESTE</th>
+                <th>STATUT</th>
               </tr>
             </thead>
             <tbody>
-              {chartData.map((d, i) => (
+              {filteredSales.map((s, i) => (
                 <tr key={i}>
-                  <td>{d.name}</td>
-                  <td>{d.orders}</td>
-                  <td>{d.total.toLocaleString()} F CFA</td>
-                  <td>{Math.round(d.total - (d.total / 1.18)).toLocaleString()} F CFA</td>
-                  <td>{Math.round(d.total / 1.18).toLocaleString()} F CFA</td>
+                  <td>
+                    <b>{s.customerName || 'Client Passager'}</b><br />
+                    <small>{new Date(s.timestamp).toLocaleDateString()}</small>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>{s.total.toLocaleString()}</td>
+                  <td style={{ textAlign: 'right' }}>{(s.paidAmount || s.total).toLocaleString()}</td>
+                  <td style={{ textAlign: 'right' }}>{(s.total - (s.paidAmount || s.total)).toLocaleString()}</td>
+                  <td>
+                    <span className={`badge ${s.paymentStatus || 'paid'}`}>
+                      {s.paymentStatus === 'paid' ? 'Payé' : s.paymentStatus === 'partial' ? 'Tranche' : 'En attente'}
+                    </span>
+                  </td>
                 </tr>
               ))}
-              <tr className="total-row">
-                <td>TOTAL GÉNÉRAL</td>
-                <td>{totalPeriodOrders}</td>
-                <td>{totalPeriodRevenue.toLocaleString()} F CFA</td>
-                <td>{Math.round(totalPeriodRevenue - (totalPeriodRevenue / 1.18)).toLocaleString()} F CFA</td>
-                <td>{Math.round(totalPeriodRevenue / 1.18).toLocaleString()} F CFA</td>
-              </tr>
             </tbody>
           </table>
 
           <div className="footer">
-            <p>X-Shop - Le partenaire de votre croissance numérique</p>
+            <p>X-Shop - Document généré par le système de gestion</p>
             <p>© 2026 Tous droits réservés</p>
           </div>
         </div>
@@ -290,7 +318,7 @@ const ReportsView = ({ sales, products }) => {
         <div className="header-actions-complex">
           <div className="filter-group-premium">
             <div className="range-selector">
-              <Filter size={16} />
+              <Calendar size={16} />
               <select
                 value={reportRange}
                 onChange={(e) => setReportRange(e.target.value)}
@@ -303,6 +331,22 @@ const ReportsView = ({ sales, products }) => {
                 <option value="current_year">Année en cours</option>
                 <option value="last_year">Année passée</option>
                 <option value="custom">Personnalisé...</option>
+              </select>
+            </div>
+
+            <div className="divider-minimal"></div>
+
+            <div className="range-selector">
+              <Filter size={16} />
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="premium-select"
+              >
+                <option value="all">Tous les règlements</option>
+                <option value="paid">Payés</option>
+                <option value="partial">Tranches / Impayés</option>
+                <option value="pending">En attente</option>
               </select>
             </div>
 
@@ -382,9 +426,110 @@ const ReportsView = ({ sales, products }) => {
       </div>
 
       <div className="reports-main-grid">
+        <div className="card-premium full-width-table">
+          <div className="card-title-f">
+            <h3><Activity size={20} /> Suivi des Ventes & Clients</h3>
+            <span className="badge-count-p">{filteredSales.length} Transactions</span>
+          </div>
+
+          <div className="table-wrapper-p">
+            <table className="pos-report-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>ID</th>
+                  <th>CLIENT</th>
+                  <th>TOTAL</th>
+                  <th>PAYÉ</th>
+                  <th>RESTE</th>
+                  <th>STATUT</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSales.map((sale) => (
+                  <tr key={sale.id}>
+                    <td>{new Date(sale.timestamp).toLocaleDateString()}</td>
+                    <td>#{sale.id.toString().slice(-6)}</td>
+                    <td>
+                      <div className="client-cell">
+                        <span className="name">{sale.customerName || 'Passager'}</span>
+                        <span className="phone">{sale.customerPhone}</span>
+                      </div>
+                    </td>
+                    <td className="font-bold">{sale.total.toLocaleString()} F</td>
+                    <td className="text-success">{(sale.paidAmount || sale.total).toLocaleString()} F</td>
+                    <td className={sale.total - (sale.paidAmount || sale.total) > 0 ? 'text-danger font-bold' : ''}>
+                      {(sale.total - (sale.paidAmount || sale.total)).toLocaleString()} F
+                    </td>
+                    <td>
+                      <span className={`status-pill ${sale.paymentStatus || 'paid'}`}>
+                        {sale.paymentStatus === 'paid' ? 'Soldé' : sale.paymentStatus === 'partial' ? 'Partiel' : 'Attente'}
+                      </span>
+                    </td>
+                    <td>
+                      {sale.paymentStatus !== 'paid' && (
+                        <button
+                          className="btn-action-p"
+                          onClick={() => setUpdatingSale(sale)}
+                          title="Enregistrer un versement"
+                        >
+                          <Banknote size={16} /> Versement
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Versement */}
+      <AnimatePresence>
+        {updatingSale && (
+          <div className="elite-modal-overlay">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="installment-modal card-premium"
+            >
+              <div className="modal-head-p">
+                <h3>Nouveau Versement</h3>
+                <button onClick={() => setUpdatingSale(null)}><X size={20} /></button>
+              </div>
+              <div className="modal-info-p">
+                <p>Client : <b>{updatingSale.customerName || 'Passager'}</b></p>
+                <p>Reste à payer : <b className="text-danger">{(updatingSale.total - (updatingSale.paidAmount || updatingSale.total)).toLocaleString()} F CFA</b></p>
+              </div>
+              <form onSubmit={handleUpdatePayment} className="installment-form">
+                <div className="input-group-p">
+                  <label>Montant du versement</label>
+                  <input
+                    type="number"
+                    autoFocus
+                    value={newInstallment}
+                    onChange={(e) => setNewInstallment(e.target.value)}
+                    placeholder="Entrez le montant..."
+                    max={updatingSale.total - (updatingSale.paidAmount || updatingSale.total)}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn-confirm-elite w-full">
+                  Valider le paiement
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="reports-main-grid">
         <div className="card-premium chart-lrg">
           <div className="card-title-f">
-            <h3><LineIcon size={20} /> Évolution des Ventes</h3>
+            <h3><LineIcon size={20} /> Évolution des Recettes (Encaissé)</h3>
             <div className="period-badge">{reportType === 'daily' ? 'Journalier' : 'Mensuel'}</div>
           </div>
           <div className="chart-box-rep">
@@ -489,8 +634,42 @@ const ReportsView = ({ sales, products }) => {
                 .rep-stat-data h3 { font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
 
                 .reports-main-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 24px; }
+                .full-width-table { grid-column: span 2; padding: 32px; }
+                
                 .card-title-f { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
                 .card-title-f h3 { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
+                .badge-count-p { background: var(--bg-main); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+                
+                .table-wrapper-p { overflow-x: auto; }
+                .pos-report-table { width: 100%; border-collapse: collapse; }
+                .pos-report-table th { text-align: left; padding: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--bg-main); }
+                .pos-report-table td { padding: 16px; border-bottom: 1px solid var(--bg-main); font-size: 0.9rem; vertical-align: middle; }
+                
+                .client-cell { display: flex; flex-direction: column; }
+                .client-cell .name { font-weight: 700; color: var(--text-primary); }
+                .client-cell .phone { font-size: 0.75rem; color: var(--text-muted); }
+                
+                .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+                .status-pill.paid { background: #d1fae5; color: #059669; }
+                .status-pill.partial { background: #fef3c7; color: #d97706; }
+                .status-pill.pending { background: #fee2e2; color: #dc2626; }
+                
+                .btn-action-p { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: white; border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
+                .btn-action-p:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+                
+                .installment-modal { width: 100%; max-width: 400px; padding: 32px; background: white; z-index: 2600; }
+                .modal-head-p { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+                .modal-head-p h3 { font-size: 1.25rem; font-weight: 800; }
+                .modal-info-p { background: var(--bg-main); padding: 16px; border-radius: 16px; margin-bottom: 24px; font-size: 0.9rem; }
+                .input-group-p { margin-bottom: 24px; }
+                .input-group-p label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+                .input-group-p input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-size: 1rem; font-weight: 700; }
+
+                .font-bold { font-weight: 800; }
+                .text-success { color: #059669; }
+                .text-danger { color: #dc2626; }
+                .w-full { width: 100%; }
+
                 .period-badge { background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
                 .chart-box-rep { min-height: 380px; display: flex; align-items: center; justify-content: center; }
                 

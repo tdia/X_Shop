@@ -15,6 +15,26 @@ const Sale = sequelize.define('Sale', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
+    paidAmount: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0
+    },
+    paymentStatus: {
+        type: DataTypes.ENUM('paid', 'partial', 'pending'),
+        defaultValue: 'paid'
+    },
+    customerName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    customerPhone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    customerId: {
+        type: DataTypes.BIGINT,
+        allowNull: true
+    },
     timestamp: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

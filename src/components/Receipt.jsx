@@ -77,7 +77,7 @@ const Receipt = ({ sale, onClose }) => {
                         <h4>DÉTAILS DE LA VENTE</h4>
                         <p><b>Facture N°:</b> #${sale.id.toString().slice(-8)}<br>
                         <b>Date:</b> ${new Date(sale.timestamp).toLocaleString()}<br>
-                        <b>Client:</b> Passager</p>
+                        <b>Client:</b> ${sale.customerName || 'Passager'}</p>
                     </div>
 
                     <table>
@@ -128,7 +128,8 @@ const Receipt = ({ sale, onClose }) => {
                         <p>123 Avenue du Design, Dakar<br>
                         Tel: +221 33 800 00 00</p>
                         <p><b>TICKET #${sale.id.toString().slice(-6)}</b><br>
-                        ${new Date(sale.timestamp).toLocaleDateString()} - ${new Date(sale.timestamp).toLocaleTimeString()}</p>
+                        ${new Date(sale.timestamp).toLocaleDateString()} - ${new Date(sale.timestamp).toLocaleTimeString()}<br>
+                        <b>Client:</b> ${sale.customerName || 'Passager'}</p>
                     </div>
 
                     <div class="ticket-body">

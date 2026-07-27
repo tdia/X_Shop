@@ -40,10 +40,31 @@ const api = {
     }).then(res => res.json()),
     deleteProduct: (id) => fetch(`${API_URL}/products/${id}`, { method: 'DELETE' }).then(res => res.json()),
 
+    // Customers
+    getCustomers: () => fetch(`${API_URL}/customers`).then(res => res.json()),
+    addCustomer: (data) => fetch(`${API_URL}/customers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    updateCustomer: (id, data) => fetch(`${API_URL}/customers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    deleteCustomer: (id) => fetch(`${API_URL}/customers/${id}`, {
+        method: 'DELETE'
+    }).then(res => res.json()),
+
     // Sales
     getSales: () => fetch(`${API_URL}/sales`).then(res => res.json()),
     addSale: (saleData) => fetch(`${API_URL}/sales`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saleData)
+    }).then(res => res.json()),
+    updateSale: (id, saleData) => fetch(`${API_URL}/sales/${id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(saleData)
     }).then(res => res.json())

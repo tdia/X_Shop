@@ -7,6 +7,7 @@ import InventoryView from './components/views/InventoryView';
 import ReportsView from './components/views/ReportsView';
 import LoginView from './components/views/LoginView';
 import UserManagementView from './components/views/UserManagementView';
+import CustomersView from './components/views/CustomersView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './services/api';
 import './App.css';
@@ -16,16 +17,19 @@ function AppContent() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const [productsData, salesData] = await Promise.all([
+      const [productsData, salesData, customersData] = await Promise.all([
         api.getProducts(),
-        api.getSales()
+        api.getSales(),
+        api.getCustomers()
       ]);
       setProducts(productsData);
       setSales(salesData);
+      setCustomers(customersData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -61,11 +65,18 @@ function AppContent() {
     return <LoginView />;
   }
 
-  const addSale = async (cartItems) => {
+  const addSale = async (cartItems, paymentDetails = {}) => {
     const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     try {
-      const newSale = await api.addSale({ items: cartItems, total });
+      const newSale = await api.addSale({
+        items: cartItems,
+        total,
+        ...paymentDetails
+      });
       setSales([newSale, ...sales]);
+
+      // Update customers if new one or updated
+      fetchData(); // Refresh all to be sure
 
       // Update local products stock
       setProducts(products.map(p => {
@@ -79,6 +90,16 @@ function AppContent() {
       return newSale;
     } catch (error) {
       alert("Erreur lors de la validation de la vente");
+    }
+  };
+
+  const updateSale = async (id, updatedData) => {
+    try {
+      const updated = await api.updateSale(id, updatedData);
+      setSales(sales.map(s => s.id === id ? updated : s));
+      return updated;
+    } catch (error) {
+      alert("Erreur lors de la mise à jour de la vente");
     }
   };
 
@@ -102,6 +123,21 @@ function AppContent() {
     setProducts(products.map(p => p.id === productId ? updated : p));
   };
 
+  const addCustomer = async (data) => {
+    const newCustomer = await api.addCustomer(data);
+    setCustomers([...customers, newCustomer]);
+  };
+
+  const updateCustomer = async (id, data) => {
+    const updated = await api.updateCustomer(id, data);
+    setCustomers(customers.map(c => c.id === id ? updated : c));
+  };
+
+  const deleteCustomer = async (id) => {
+    await api.deleteCustomer(id);
+    setCustomers(customers.filter(c => c.id !== id));
+  };
+
   const renderView = () => {
     if (loading) return <div>Chargement des données...</div>;
 
@@ -109,7 +145,7 @@ function AppContent() {
       case 'dashboard':
         return <DashboardView sales={sales} products={products} />;
       case 'pos':
-        return <POSView products={products} addSale={addSale} />;
+        return <POSView products={products} customers={customers} addSale={addSale} addCustomer={addCustomer} />;
       case 'inventory':
         return (
           <InventoryView
@@ -122,7 +158,17 @@ function AppContent() {
           />
         );
       case 'reports':
-        return <ReportsView sales={sales} />;
+        return <ReportsView sales={sales} updateSale={updateSale} />;
+      case 'customers':
+        return (
+          <CustomersView
+            sales={sales}
+            customers={customers}
+            addCustomer={addCustomer}
+            updateCustomer={updateCustomer}
+            deleteCustomer={deleteCustomer}
+          />
+        );
       case 'users':
         return <UserManagementView />;
       default:

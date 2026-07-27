@@ -1,73 +1,81 @@
 import React from 'react';
 import {
-    LayoutDashboard,
-    ShoppingCart,
-    Package,
-    BarChart3,
-    Users,
-    LogOut,
-    Store,
-    Settings,
-    ChevronRight
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  BarChart3,
+  Users,
+  UserCog,
+  LogOut,
+  Store,
+  Settings,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 
 const Sidebar = ({ currentView, setCurrentView }) => {
-    const { user, logout } = useAuth();
+  const { user, logout } = useAuth();
 
-    const menuItems = [
-        { id: 'dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, roles: ['admin', 'gestionnaire', 'manager'] },
-        { id: 'pos', label: 'Ventes (POS)', icon: ShoppingCart, roles: ['admin', 'vendeur'] },
-        { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire'] },
-        { id: 'reports', label: 'Rapports', icon: BarChart3, roles: ['admin', 'manager'] },
-        { id: 'users', label: 'Utilisateurs', icon: Users, roles: ['admin'] },
-    ];
+  const menuItems = [
+    { id: 'dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, roles: ['admin', 'gestionnaire', 'manager'] },
+    { id: 'pos', label: 'Ventes (POS)', icon: ShoppingCart, roles: ['admin', 'vendeur'] },
+    { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire'] },
+    { id: 'customers', label: 'Clients', icon: Users, roles: ['admin', 'manager', 'vendeur', 'gestionnaire'] },
+    { id: 'reports', label: 'Rapports', icon: BarChart3, roles: ['admin', 'manager'] },
+    { id: 'users', label: 'Utilisateurs', icon: UserCog, roles: ['admin'] },
+  ];
 
-    const filteredMenu = menuItems.filter(item => item.roles.includes(user?.role));
+  const filteredMenu = menuItems.filter(item => {
+    if (!user) return false;
+    const userRole = user.role?.toLowerCase();
+    if (userRole === 'admin') return true;
+    if (item.id === 'customers') return true; // Debug: Toujours afficher clients
+    return item.roles.includes(userRole);
+  });
 
-    return (
-        <aside className="x-sidebar-light">
-            <div className="sidebar-brand">
-                <div className="brand-logo-wrap">
-                    <span style={{ color: 'white', fontWeight: 900, fontSize: '1.2rem' }}>X</span>
-                </div>
-                <span className="brand-name">X-Shop</span>
-            </div>
+  return (
+    <aside className="x-sidebar-light">
+      <div className="sidebar-brand">
+        <div className="brand-logo-wrap">
+          <span style={{ color: 'white', fontWeight: 900, fontSize: '1.2rem' }}>X</span>
+        </div>
+        <span className="brand-name">X-Shop</span>
+      </div>
 
-            <nav className="sidebar-nav">
-                {filteredMenu.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentView === item.id;
-                    return (
-                        <button
-                            key={item.id}
-                            className={`nav-link-light ${isActive ? 'active' : ''}`}
-                            onClick={() => setCurrentView(item.id)}
-                        >
-                            <div className="icon-container">
-                                <Icon size={20} />
-                            </div>
-                            <span className="label">{item.label}</span>
-                            {isActive && <motion.div layoutId="active-dot" className="active-indicator" />}
-                        </button>
-                    );
-                })}
-            </nav>
+      <nav className="sidebar-nav">
+        {filteredMenu.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              className={`nav-link-light ${isActive ? 'active' : ''}`}
+              onClick={() => setCurrentView(item.id)}
+            >
+              <div className="icon-container">
+                <Icon size={20} />
+              </div>
+              <span className="label">{item.label}</span>
+              {isActive && <motion.div layoutId="active-dot" className="active-indicator" />}
+            </button>
+          );
+        })}
+      </nav>
 
-            <div className="sidebar-footer">
-                <div className="settings-link">
-                    <Settings size={20} />
-                    <span>Paramètres</span>
-                </div>
-                <button className="logout-button" onClick={logout}>
-                    <LogOut size={20} />
-                    <span>Déconnexion</span>
-                </button>
-            </div>
+      <div className="sidebar-footer">
+        <div className="settings-link">
+          <Settings size={20} />
+          <span>Paramètres</span>
+        </div>
+        <button className="logout-button" onClick={logout}>
+          <LogOut size={20} />
+          <span>Déconnexion</span>
+        </button>
+      </div>
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .x-sidebar-light {
           width: 280px;
           height: 100vh;
@@ -196,8 +204,8 @@ const Sidebar = ({ currentView, setCurrentView }) => {
           .logout-button { justify-content: center; width: 50px; margin: 0 auto; }
         }
       `}} />
-        </aside>
-    );
+    </aside>
+  );
 };
 
 export default Sidebar;

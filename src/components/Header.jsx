@@ -9,6 +9,7 @@ const Header = ({ currentView }) => {
     dashboard: 'Tableau de Bord',
     pos: 'Interface de Vente (POS)',
     inventory: 'Gestion du Stock',
+    customers: 'Base de Données Clients',
     reports: 'Rapports d\'Activité',
     users: 'Gestion des Utilisateurs'
   };

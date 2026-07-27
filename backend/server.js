@@ -5,8 +5,13 @@ import sequelize from './config/database.js';
 import User from './models/User.js';
 import Product from './models/Product.js';
 import Sale from './models/Sale.js';
+import Customer from './models/Customer.js';
 
 dotenv.config();
+
+// Define Associations
+Customer.hasMany(Sale, { foreignKey: 'customerId' });
+Sale.belongsTo(Customer, { foreignKey: 'customerId' });
 
 const app = express();
 app.use(cors());
@@ -71,26 +76,89 @@ app.delete('/api/products/:id', async (req, res) => {
     res.json({ success: true });
 });
 
+// Customer Management
+app.get('/api/customers', async (req, res) => {
+    try {
+        const customers = await Customer.findAll();
+        res.json(customers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/customers', async (req, res) => {
+    try {
+        const customer = await Customer.create(req.body);
+        res.json(customer);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/customers/:id', async (req, res) => {
+    try {
+        await Customer.update(req.body, { where: { id: req.params.id } });
+        const updated = await Customer.findByPk(req.params.id);
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/customers/:id', async (req, res) => {
+    try {
+        await Customer.destroy({ where: { id: req.params.id } });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Sales Management
 app.get('/api/sales', async (req, res) => {
     const sales = await Sale.findAll({ order: [['timestamp', 'DESC']] });
     // Map items string back to objects
-    const formatted = sales.map(s => ({
-        ...s.toJSON(),
-        items: JSON.parse(s.items)
-    }));
+    const formatted = sales.map(s => {
+        const saleJson = s.toJSON();
+        let parsedItems = [];
+        try {
+            parsedItems = typeof saleJson.items === 'string' ? JSON.parse(saleJson.items) : saleJson.items;
+        } catch (e) {
+            console.error("Error parsing sale items:", e);
+        }
+        return { ...saleJson, items: parsedItems };
+    });
     res.json(formatted);
 });
 
 app.post('/api/sales', async (req, res) => {
-    const { items, total } = req.body;
+    const { items, total, paidAmount, paymentStatus, customerName, customerPhone } = req.body;
 
     // Start transaction for stock update
     const t = await sequelize.transaction();
     try {
+        // Auto-create or update customer if info provided
+        let linkedCustomerId = null;
+        if (customerPhone) {
+            const [customer, created] = await Customer.findOrCreate({
+                where: { phone: customerPhone },
+                defaults: { name: customerName || 'Client Inconnu' },
+                transaction: t
+            });
+            linkedCustomerId = customer.id;
+            if (!created && customerName && customer.name !== customerName) {
+                await customer.update({ name: customerName }, { transaction: t });
+            }
+        }
+
         const sale = await Sale.create({
             items: JSON.stringify(items),
-            total
+            total,
+            paidAmount: paidAmount || total,
+            paymentStatus: paymentStatus || 'paid',
+            customerName,
+            customerPhone,
+            customerId: linkedCustomerId
         }, { transaction: t });
 
         // Update stock for each product
@@ -111,9 +179,23 @@ app.post('/api/sales', async (req, res) => {
     }
 });
 
+app.put('/api/sales/:id', async (req, res) => {
+    try {
+        await Sale.update(req.body, { where: { id: req.params.id } });
+        const updated = await Sale.findByPk(req.params.id);
+        const saleJson = updated.toJSON();
+        res.json({
+            ...saleJson,
+            items: JSON.parse(saleJson.items)
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 const PORT = process.env.PORT || 5000;
 
-sequelize.sync().then(async () => {
+sequelize.sync({ alter: true }).then(async () => {
     // Seed admin if not exists
     const admin = await User.findOne({ where: { username: 'admin' } });
     if (!admin) {

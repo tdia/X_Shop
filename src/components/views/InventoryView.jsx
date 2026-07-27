@@ -110,7 +110,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
           <Search size={20} className="search-icon" />
           <input
             type="text"
-            placeholder="Rechercher un meuble, une référence..."
+            placeholder="Rechercher un article, une référence..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -134,7 +134,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
           {canEdit && (
             <button className="btn-primary-elite" onClick={() => handleOpenModal()}>
               <Plus size={20} />
-              <span>Nouveau Meuble</span>
+              <span>Nouveau Article</span>
             </button>
           )}
         </div>
@@ -244,7 +244,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                   </div>
                   <div>
                     <h3>{editingProduct ? 'Édition de l\'article' : 'Nouvel Article'}</h3>
-                    <p>Définissez les propriétés de votre meuble</p>
+                    <p>Définissez les propriétés de votre article</p>
                   </div>
                 </div>
                 <button className="btn-close-elite" onClick={() => setShowModal(false)}><X size={20} /></button>
@@ -274,7 +274,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                       </div>
                       <div className="preview-info">
                         <span className="prev-cat">{formData.category || 'Catégorie'}</span>
-                        <h4 className="prev-name">{formData.name || 'Nom du meuble'}</h4>
+                        <h4 className="prev-name">{formData.name || 'Nom de l\'article'}</h4>
                         <span className="prev-price">{formData.price ? new Intl.NumberFormat('fr-FR').format(formData.price) : '0'} F CFA</span>
                       </div>
                       <div className="preview-status">
@@ -356,7 +356,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                 <div className="creation-footer">
                   <button type="button" className="btn-cancel-elite" onClick={() => setShowModal(false)}>Annuler</button>
                   <button type="submit" className="btn-confirm-elite">
-                    {editingProduct ? 'Mettre à jour' : 'Enregistrer le meuble'}
+                    {editingProduct ? 'Mettre à jour' : 'Enregistrer l\'article'}
                     <ChevronRight size={18} />
                   </button>
                 </div>
