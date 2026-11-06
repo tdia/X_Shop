@@ -34,11 +34,11 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
     category: 'Salon',
     price: '',
     stock: '',
-    image: '🛋️',
+    image: '🛒',
     photo: null
   });
 
-  const categories = ['Salon', 'Chambre', 'Bureau', 'Salle à manger', 'Déco', 'Autres'];
+  const categories = ['Alimentation', 'Boissons', 'Hygiène', 'Entretien', 'Snacks', 'Épicerie', 'Frais', 'Autres'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +60,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', category: 'Salon', price: '', stock: '', image: '🛋️', photo: null });
+      setFormData({ name: '', category: 'Alimentation', price: '', stock: '', image: '🛒', photo: null });
     }
     setShowModal(true);
   };
@@ -110,7 +110,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
           <Search size={20} className="search-icon" />
           <input
             type="text"
-            placeholder="Rechercher un meuble, une référence..."
+            placeholder="Rechercher un produit, une référence..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -134,7 +134,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
           {canEdit && (
             <button className="btn-primary-elite" onClick={() => handleOpenModal()}>
               <Plus size={20} />
-              <span>Nouveau Meuble</span>
+              <span>Nouveau Produit</span>
             </button>
           )}
         </div>
@@ -244,7 +244,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                   </div>
                   <div>
                     <h3>{editingProduct ? 'Édition de l\'article' : 'Nouvel Article'}</h3>
-                    <p>Définissez les propriétés de votre meuble</p>
+                    <p>Définissez les propriétés de votre produit</p>
                   </div>
                 </div>
                 <button className="btn-close-elite" onClick={() => setShowModal(false)}><X size={20} /></button>
@@ -259,7 +259,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                         {formData.photo ? (
                           <img src={formData.photo} alt="Preview" className="prev-img-elite" />
                         ) : (
-                          formData.image || '🛋️'
+                          formData.image || '🛒'
                         )}
                         <button type="button" className="photo-upload-btn" onClick={() => fileInputRef.current.click()}>
                           <Camera size={18} />
@@ -274,7 +274,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                       </div>
                       <div className="preview-info">
                         <span className="prev-cat">{formData.category || 'Catégorie'}</span>
-                        <h4 className="prev-name">{formData.name || 'Nom du meuble'}</h4>
+                        <h4 className="prev-name">{formData.name || 'Nom du produit'}</h4>
                         <span className="prev-price">{formData.price ? new Intl.NumberFormat('fr-FR').format(formData.price) : '0'} F CFA</span>
                       </div>
                       <div className="preview-status">
@@ -356,7 +356,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
                 <div className="creation-footer">
                   <button type="button" className="btn-cancel-elite" onClick={() => setShowModal(false)}>Annuler</button>
                   <button type="submit" className="btn-confirm-elite">
-                    {editingProduct ? 'Mettre à jour' : 'Enregistrer le meuble'}
+                    {editingProduct ? 'Mettre à jour' : 'Enregistrer le produit'}
                     <ChevronRight size={18} />
                   </button>
                 </div>
@@ -618,11 +618,26 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
         .btn-cancel-elite { padding: 14px 28px; font-weight: 700; color: var(--text-secondary); background: var(--bg-main); border-radius: 16px; }
         .btn-confirm-elite { padding: 14px 32px; background: var(--grad-primary); color: white; border-radius: 16px; font-weight: 800; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 20px var(--primary-glow); }
 
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
         @media (max-width: 900px) {
           .form-sections-grid { grid-template-columns: 1fr; }
           .form-preview-section { display: none; }
           .inventory-top-bar { flex-direction: column; align-items: flex-start; }
           .search-box-premium { max-width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+          .inventory-top-bar { align-items: stretch; }
+          .filter-actions { flex-wrap: wrap; }
+          .btn-primary-elite { flex: 1; justify-content: center; }
+          .elite-table { min-width: 680px; }
+          .elite-creation-card { padding: 24px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
+          .creation-header { margin-bottom: 24px; }
+          .header-left h3 { font-size: 1.35rem; }
+          .input-row-elite { grid-template-columns: 1fr; }
+          .creation-footer { flex-direction: column-reverse; padding-top: 24px; }
+          .btn-cancel-elite, .btn-confirm-elite { width: 100%; justify-content: center; }
         }
       `}} />
     </div>

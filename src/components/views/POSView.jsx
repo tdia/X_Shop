@@ -338,6 +338,18 @@ const POSView = ({ products, addSale }) => {
           .pos-layout { grid-template-columns: 1fr; height: auto; }
           .pos-cart-panel { height: 600px; }
         }
+
+        @media (max-width: 768px) {
+          .pos-nav-glass { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px; }
+          .search-pill { width: 100%; }
+          .pos-items-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+          .pos-item-card { padding: 12px; border-radius: 16px; }
+          .item-img-box { height: 90px; font-size: 2rem; margin-bottom: 10px; }
+          .item-name { font-size: 0.9rem; }
+          .pos-cart-panel { height: auto; padding: 20px; }
+          .cart-scroller { margin: 20px 0; max-height: 45vh; }
+          .check-row.total { font-size: 1.25rem; }
+        }
       `}} />
     </div>
   );

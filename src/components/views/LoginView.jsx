@@ -253,6 +253,15 @@ const LoginView = () => {
           .login-left { padding: 40px; }
           .login-brand { position: relative; top: 0; margin-bottom: 60px; }
         }
+
+        @media (max-width: 480px) {
+          .login-left { padding: 28px 22px; }
+          .login-brand { margin-bottom: 40px; gap: 12px; }
+          .brand-logo-big { width: 48px; height: 48px; }
+          .login-header-text { margin-bottom: 28px; }
+          .login-header-text h2 { font-size: 1.6rem; }
+          .login-help { margin-top: 28px; }
+        }
       `}} />
     </div>
   );

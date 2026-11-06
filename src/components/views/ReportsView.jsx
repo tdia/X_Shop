@@ -338,6 +338,17 @@ const ReportsView = ({ sales }) => {
                     .reports-main-grid { grid-template-columns: 1fr; }
                     .reports-stats-row { grid-template-columns: 1fr; }
                 }
+
+                @media (max-width: 768px) {
+                    .reports-header-light { flex-direction: column; align-items: stretch; gap: 20px; }
+                    .header-actions-pill { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px; border-radius: 18px; }
+                    .divider-v { display: none; }
+                    .type-toggle { justify-content: center; }
+                    .btn-utility { justify-content: center; display: flex; align-items: center; gap: 8px; }
+                    .header-info-wrap h2 { font-size: 1.4rem; }
+                    .rep-stat-card { padding: 20px 24px; }
+                    .card-title-f { margin-bottom: 20px; }
+                }
             `}} />
     </div>
   );

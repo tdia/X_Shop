@@ -156,6 +156,14 @@ const Header = ({ currentView }) => {
         @media (max-width: 850px) {
           .header-search, .header-subtitle { display: none; }
         }
+
+        @media (max-width: 768px) {
+          .header-light { height: auto; padding: 16px 0 8px; gap: 12px; }
+          .header-title { font-size: 1.3rem; }
+          .header-right { gap: 12px; }
+          .user-text { display: none; }
+          .user-pill { padding: 6px; }
+        }
       `}} />
     </header>
   );

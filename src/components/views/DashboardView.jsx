@@ -258,6 +258,17 @@ const DashboardView = ({ sales, products }) => {
         @media (max-width: 1200px) {
           .charts-row { grid-template-columns: 1fr; }
         }
+
+        @media (max-width: 768px) {
+          .dash-view-light { gap: 20px; }
+          .stats-row { grid-template-columns: 1fr; gap: 16px; }
+          .card-premium { padding: 20px; }
+          .chart-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+          .mini-card { padding: 24px; }
+          .mini-body h2 { font-size: 2rem; }
+          .stat-data .value { font-size: 1.2rem; }
+          .trend-badge-light { top: 16px; right: 16px; }
+        }
       `}} />
         </div>
     );

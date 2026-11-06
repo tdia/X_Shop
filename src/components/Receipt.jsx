@@ -334,6 +334,15 @@ const Receipt = ({ sale, onClose }) => {
             0% { left: -150%; }
             100% { left: 150%; }
         }
+
+        @media (max-width: 480px) {
+            .elite-receipt-modal { padding: 24px; border-radius: 24px; }
+            .receipt-top-status { margin-bottom: 24px; }
+            .receipt-top-status h2 { font-size: 1.4rem; }
+            .receipt-format-selection { margin-bottom: 24px; }
+            .receipt-quick-summary { padding: 18px; margin-bottom: 24px; }
+            .receipt-actions-elite { flex-direction: column-reverse; }
+        }
       `}} />
     </div>
   );

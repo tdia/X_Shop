@@ -394,10 +394,26 @@ const UserManagementView = () => {
                 .btn-cancel-p { padding: 14px 28px; font-weight: 700; color: var(--text-secondary); border-radius: 16px; background: var(--bg-main); }
                 .btn-submit-p { padding: 14px 32px; background: var(--grad-primary); color: white; border-radius: 16px; font-weight: 800; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px var(--primary-glow); }
 
+                .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
                 @media (max-width: 800px) {
                     .form-main-content { grid-template-columns: 1fr; }
                     .header-actions { flex-direction: column; align-items: stretch; }
                     .search-bar-lite { width: 100%; }
+                }
+
+                @media (max-width: 768px) {
+                    .view-header-elite { flex-direction: column; align-items: stretch; gap: 20px; }
+                    .header-info-box h2 { font-size: 1.4rem; }
+                    .btn-primary-elite { justify-content: center; }
+                    .elite-table-alt { min-width: 720px; }
+                    .elite-user-modal { max-height: 92vh; overflow-y: auto; }
+                    .modal-header-elite { padding: 24px; }
+                    .modal-header-elite h3 { font-size: 1.25rem; }
+                    .elite-form-p { padding: 24px; }
+                    .form-main-content { gap: 24px; margin-bottom: 24px; }
+                    .modal-footer-p { flex-direction: column-reverse; padding-top: 24px; }
+                    .btn-cancel-p, .btn-submit-p { width: 100%; justify-content: center; }
                 }
             `}} />
         </div>
