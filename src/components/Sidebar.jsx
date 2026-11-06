@@ -19,7 +19,7 @@ const Sidebar = ({ currentView, setCurrentView }) => {
     const menuItems = [
         { id: 'dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, roles: ['admin', 'gestionnaire', 'manager'] },
         { id: 'pos', label: 'Ventes (POS)', icon: ShoppingCart, roles: ['admin', 'vendeur'] },
-        { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire'] },
+        { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire', 'vendeur'] },
         { id: 'reports', label: 'Rapports', icon: BarChart3, roles: ['admin', 'manager'] },
         { id: 'users', label: 'Utilisateurs', icon: Users, roles: ['admin'] },
     ];
@@ -56,10 +56,15 @@ const Sidebar = ({ currentView, setCurrentView }) => {
             </nav>
 
             <div className="sidebar-footer">
-                <div className="settings-link">
-                    <Settings size={20} />
-                    <span>Paramètres</span>
-                </div>
+                {user?.role === 'admin' && (
+                    <button
+                        className={`settings-link ${currentView === 'settings' ? 'active' : ''}`}
+                        onClick={() => setCurrentView('settings')}
+                    >
+                        <Settings size={20} />
+                        <span>Paramètres</span>
+                    </button>
+                )}
                 <button className="logout-button" onClick={logout}>
                     <LogOut size={20} />
                     <span>Déconnexion</span>
@@ -168,7 +173,17 @@ const Sidebar = ({ currentView, setCurrentView }) => {
           color: var(--text-muted);
           font-weight: 600;
           cursor: pointer;
+          background: transparent;
+          border: none;
+          border-radius: 14px;
+          width: 100%;
+          font-family: inherit;
+          font-size: 1rem;
+          text-align: left;
         }
+
+        .settings-link:hover { background: var(--bg-main); color: var(--primary); }
+        .settings-link.active { background: var(--primary-light); color: var(--primary); }
 
         .logout-button {
           display: flex;
@@ -243,7 +258,13 @@ const Sidebar = ({ currentView, setCurrentView }) => {
             border-top: none;
             gap: 0;
           }
-          .settings-link { display: none; }
+          .settings-link {
+            flex-direction: column;
+            gap: 3px;
+            width: auto;
+            padding: 6px 10px;
+          }
+          .settings-link span { display: block; font-size: 0.6rem; font-weight: 700; line-height: 1; }
           .logout-button {
             flex-direction: column;
             gap: 3px;

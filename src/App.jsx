@@ -7,6 +7,7 @@ import InventoryView from './components/views/InventoryView';
 import ReportsView from './components/views/ReportsView';
 import LoginView from './components/views/LoginView';
 import UserManagementView from './components/views/UserManagementView';
+import SettingsView from './components/views/SettingsView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './services/api';
 import './App.css';
@@ -43,9 +44,9 @@ function AppContent() {
   useEffect(() => {
     if (!user) return;
     const restrictedViews = {
-      vendeur: ['dashboard', 'inventory', 'reports', 'users'],
-      manager: ['pos', 'inventory', 'users'],
-      gestionnaire: ['users']
+      vendeur: ['dashboard', 'reports', 'users', 'settings'],
+      manager: ['pos', 'inventory', 'users', 'settings'],
+      gestionnaire: ['users', 'settings']
     };
 
     if (restrictedViews[user.role]?.includes(currentView)) {
@@ -118,13 +119,15 @@ function AppContent() {
             addProduct={addProduct}
             updateProduct={updateProduct}
             deleteProduct={deleteProduct}
-            canEdit={['admin', 'gestionnaire'].includes(user.role)}
+            canEdit={['admin', 'gestionnaire', 'vendeur'].includes(user.role)}
           />
         );
       case 'reports':
         return <ReportsView sales={sales} />;
       case 'users':
         return <UserManagementView />;
+      case 'settings':
+        return <SettingsView products={products} onImported={fetchData} />;
       default:
         return <DashboardView sales={sales} products={products} />;
     }

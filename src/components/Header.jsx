@@ -10,7 +10,8 @@ const Header = ({ currentView }) => {
     pos: 'Interface de Vente (POS)',
     inventory: 'Gestion du Stock',
     reports: 'Rapports d\'Activité',
-    users: 'Gestion des Utilisateurs'
+    users: 'Gestion des Utilisateurs',
+    settings: 'Paramètres & Données'
   };
 
   return (

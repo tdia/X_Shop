@@ -336,7 +336,7 @@ const POSView = ({ products, addSale }) => {
 
         @media (max-width: 1400px) {
           .pos-layout { grid-template-columns: 1fr; height: auto; }
-          .pos-cart-panel { height: 600px; }
+          .pos-cart-panel { height: 600px; order: -1; }
         }
 
         @media (max-width: 768px) {
@@ -346,8 +346,8 @@ const POSView = ({ products, addSale }) => {
           .pos-item-card { padding: 12px; border-radius: 16px; }
           .item-img-box { height: 90px; font-size: 2rem; margin-bottom: 10px; }
           .item-name { font-size: 0.9rem; }
-          .pos-cart-panel { height: auto; padding: 20px; }
-          .cart-scroller { margin: 20px 0; max-height: 45vh; }
+          .pos-cart-panel { height: auto; min-height: 60vh; padding: 20px; }
+          .cart-scroller { margin: 20px 0; max-height: 45vh; min-height: 180px; }
           .check-row.total { font-size: 1.25rem; }
         }
       `}} />
