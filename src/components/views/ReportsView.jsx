@@ -473,13 +473,13 @@ const ReportsView = ({ sales, updateSale, canEdit = false }) => {
                 </select>
               </label>
               <label>
-                <span>Nom du client</span>
-                <input type="text" value={form.customerName}
+                <span>Nom du client <em className="opt">(optionnel)</em></span>
+                <input type="text" placeholder="Facultatif" value={form.customerName}
                   onChange={(e) => setForm({ ...form, customerName: e.target.value })} />
               </label>
               <label className="full">
-                <span>Téléphone du client</span>
-                <input type="text" value={form.customerPhone}
+                <span>Téléphone du client <em className="opt">(optionnel)</em></span>
+                <input type="text" placeholder="Facultatif" value={form.customerPhone}
                   onChange={(e) => setForm({ ...form, customerPhone: e.target.value })} />
               </label>
             </div>
@@ -561,6 +561,7 @@ const ReportsView = ({ sales, updateSale, canEdit = false }) => {
                 .sale-form-grid label { display: flex; flex-direction: column; gap: 6px; }
                 .sale-form-grid label.full { grid-column: 1 / -1; }
                 .sale-form-grid span { font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+                .sale-form-grid .opt { font-style: normal; font-weight: 600; text-transform: none; color: var(--text-muted); opacity: 0.75; }
                 .sale-form-grid input, .sale-form-grid select { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-main); font-size: 0.92rem; font-weight: 600; color: var(--text-primary); outline: none; }
                 .sale-form-grid input:focus, .sale-form-grid select:focus { border-color: var(--primary); }
 
