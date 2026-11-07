@@ -83,6 +83,12 @@ function AppContent() {
     }
   };
 
+  const updateSale = async (id, updatedData) => {
+    const updated = await api.updateSale(id, updatedData);
+    setSales(sales.map(s => s.id === id ? { ...s, ...updated } : s));
+    return updated;
+  };
+
   const addProduct = async (productData) => {
     const newProduct = await api.addProduct(productData);
     setProducts([...products, newProduct]);
@@ -123,7 +129,13 @@ function AppContent() {
           />
         );
       case 'reports':
-        return <ReportsView sales={sales} />;
+        return (
+          <ReportsView
+            sales={sales}
+            updateSale={updateSale}
+            canEdit={['admin', 'gestionnaire'].includes(user.role)}
+          />
+        );
       case 'users':
         return <UserManagementView />;
       case 'settings':

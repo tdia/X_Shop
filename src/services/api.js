@@ -248,8 +248,8 @@ const api = {
     const cur = one('SELECT * FROM sales WHERE id=?', [id]) || {};
     const m = { ...cur, ...saleData };
     const itemsStr = typeof m.items === 'string' ? m.items : JSON.stringify(m.items || []);
-    exec('UPDATE sales SET items=?, total=?, paidAmount=?, paymentStatus=? WHERE id=?',
-      [itemsStr, m.total, m.paidAmount, m.paymentStatus, id]);
+    exec('UPDATE sales SET items=?, total=?, paidAmount=?, paymentStatus=?, customerName=?, customerPhone=? WHERE id=?',
+      [itemsStr, m.total, m.paidAmount, m.paymentStatus, m.customerName ?? null, m.customerPhone ?? null, id]);
     await persist();
     const updated = one('SELECT * FROM sales WHERE id=?', [id]);
     return { ...updated, items: JSON.parse(updated.items || '[]') };
