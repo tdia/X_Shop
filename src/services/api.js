@@ -79,7 +79,17 @@ const SEED_PRODUCTS = [
   ['Eau de javel 1L', 'Entretien', 900, 55, '🧽'],
   ['Biscuits chocolat', 'Snacks', 500, 150, '🍪'],
   ['Chips 100g', 'Snacks', 700, 100, '🥔'],
-  ['Chocolat tablette', 'Snacks', 1000, 70, '🍫']
+  ['Chocolat tablette', 'Snacks', 1000, 70, '🍫'],
+  ['Sandwich jambon-beurre', 'Sandwichs', 1000, 40, '🥪'],
+  ['Sandwich poulet crudités', 'Sandwichs', 1500, 35, '🥪'],
+  ['Sandwich thon', 'Sandwichs', 1500, 30, '🥪'],
+  ['Sandwich œuf-mayo', 'Sandwichs', 1000, 30, '🥪'],
+  ['Sandwich fromage', 'Sandwichs', 1000, 35, '🧀'],
+  ['Sandwich steak haché', 'Sandwichs', 2000, 25, '🍔'],
+  ['Hot-dog', 'Sandwichs', 1500, 30, '🌭'],
+  ['Wrap poulet', 'Sandwichs', 1800, 25, '🌯'],
+  ['Panini mixte', 'Sandwichs', 1800, 25, '🥪'],
+  ['Hamburger maison', 'Sandwichs', 2500, 20, '🍔']
 ];
 
 // --- Initialisation (une seule fois) ---------------------------------------

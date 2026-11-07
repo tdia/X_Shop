@@ -38,7 +38,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
     photo: null
   });
 
-  const categories = ['Alimentation', 'Boissons', 'Hygiène', 'Entretien', 'Snacks', 'Épicerie', 'Frais', 'Autres'];
+  const categories = ['Alimentation', 'Boissons', 'Sandwichs', 'Hygiène', 'Entretien', 'Snacks', 'Épicerie', 'Frais', 'Autres'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
