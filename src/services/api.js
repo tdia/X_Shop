@@ -57,7 +57,15 @@ const SCHEMA = `
     items TEXT, total REAL, paidAmount REAL, paymentStatus TEXT,
     customerName TEXT, customerPhone TEXT, timestamp TEXT
   );
+  CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY, value TEXT
+  );
 `;
+
+// Version du catalogue de base. Incrémenter quand on ajoute des produits par
+// défaut : la migration insère alors les nouveautés SANS toucher aux données
+// existantes (produits ajoutés, ventes, utilisateurs sont conservés).
+const SEED_VERSION = 2;
 
 const SEED_PRODUCTS = [
   ['Eau minérale 1.5L', 'Boissons', 500, 120, '💧'],
@@ -79,7 +87,17 @@ const SEED_PRODUCTS = [
   ['Eau de javel 1L', 'Entretien', 900, 55, '🧽'],
   ['Biscuits chocolat', 'Snacks', 500, 150, '🍪'],
   ['Chips 100g', 'Snacks', 700, 100, '🥔'],
-  ['Chocolat tablette', 'Snacks', 1000, 70, '🍫']
+  ['Chocolat tablette', 'Snacks', 1000, 70, '🍫'],
+  ['Sandwich jambon-beurre', 'Sandwichs', 1000, 40, '🥪'],
+  ['Sandwich poulet crudités', 'Sandwichs', 1500, 35, '🥪'],
+  ['Sandwich thon', 'Sandwichs', 1500, 30, '🥪'],
+  ['Sandwich œuf-mayo', 'Sandwichs', 1000, 30, '🥪'],
+  ['Sandwich fromage', 'Sandwichs', 1000, 35, '🧀'],
+  ['Sandwich steak haché', 'Sandwichs', 2000, 25, '🍔'],
+  ['Hot-dog', 'Sandwichs', 1500, 30, '🌭'],
+  ['Wrap poulet', 'Sandwichs', 1800, 25, '🌯'],
+  ['Panini mixte', 'Sandwichs', 1800, 25, '🥪'],
+  ['Hamburger maison', 'Sandwichs', 2500, 20, '🍔']
 ];
 
 // --- Initialisation (une seule fois) ---------------------------------------
@@ -93,26 +111,56 @@ const persist = async () => {
   }
 };
 
+// Insère les produits du catalogue de base qui ne sont pas déjà présents
+// (comparaison par nom) → ne crée jamais de doublon, ne supprime rien.
+const insertMissingSeedProducts = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const existing = new Set(
+    all('SELECT name FROM products').map(r => (r.name || '').toLowerCase())
+  );
+  const stmt = db.prepare(
+    'INSERT INTO products (name, category, price, stock, image, photo, createdAt) VALUES (?,?,?,?,?,NULL,?)'
+  );
+  let added = 0;
+  SEED_PRODUCTS.forEach(([name, cat, price, stock, image]) => {
+    if (!existing.has(name.toLowerCase())) {
+      stmt.run([name, cat, price, stock, image, today]);
+      added++;
+    }
+  });
+  stmt.free();
+  return added;
+};
+
+const getMeta = (key) => {
+  const row = one('SELECT value FROM meta WHERE key=?', [key]);
+  return row ? row.value : null;
+};
+const setMeta = (key, value) => exec('INSERT OR REPLACE INTO meta (key, value) VALUES (?,?)', [key, String(value)]);
+
 const ready = (async () => {
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   const saved = await idbGet(DB_STORE_KEY);
   if (saved) {
+    // Base existante → on CONSERVE toutes les données et on applique seulement
+    // les nouveautés du catalogue (migration jouée une seule fois par version).
     db = new SQL.Database(new Uint8Array(saved));
-    db.run(SCHEMA); // garantit les tables si fichier ancien
+    db.run(SCHEMA); // garantit les tables (dont meta) si fichier ancien
+    const current = parseInt(getMeta('seedVersion')) || 1;
+    if (current < SEED_VERSION) {
+      insertMissingSeedProducts();
+      setMeta('seedVersion', SEED_VERSION);
+      await persist();
+    }
   } else {
+    // Première ouverture → création + catalogue complet.
     db = new SQL.Database();
     db.run(SCHEMA);
-    const today = new Date().toISOString().slice(0, 10);
     db.run(
       "INSERT INTO users (username, password, name, role) VALUES ('admin','password','Administrateur Principal','admin')"
     );
-    const stmt = db.prepare(
-      'INSERT INTO products (name, category, price, stock, image, photo, createdAt) VALUES (?,?,?,?,?,NULL,?)'
-    );
-    SEED_PRODUCTS.forEach(([name, cat, price, stock, image]) => {
-      stmt.run([name, cat, price, stock, image, today]);
-    });
-    stmt.free();
+    insertMissingSeedProducts();
+    setMeta('seedVersion', SEED_VERSION);
     await persist();
   }
 })();
@@ -238,8 +286,8 @@ const api = {
     const cur = one('SELECT * FROM sales WHERE id=?', [id]) || {};
     const m = { ...cur, ...saleData };
     const itemsStr = typeof m.items === 'string' ? m.items : JSON.stringify(m.items || []);
-    exec('UPDATE sales SET items=?, total=?, paidAmount=?, paymentStatus=? WHERE id=?',
-      [itemsStr, m.total, m.paidAmount, m.paymentStatus, id]);
+    exec('UPDATE sales SET items=?, total=?, paidAmount=?, paymentStatus=?, customerName=?, customerPhone=? WHERE id=?',
+      [itemsStr, m.total, m.paidAmount, m.paymentStatus, m.customerName ?? null, m.customerPhone ?? null, id]);
     await persist();
     const updated = one('SELECT * FROM sales WHERE id=?', [id]);
     return { ...updated, items: JSON.parse(updated.items || '[]') };
