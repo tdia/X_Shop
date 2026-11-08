@@ -42,9 +42,13 @@ const ReportsView = ({ sales, updateSale, canEdit = false }) => {
   const fmt = (n) => (Number(n) || 0).toLocaleString();
   const saleItemsCount = (s) => (s.items || []).reduce((a, it) => a + (it.quantity || 0), 0);
   const saleItemsLabel = (s) => (s.items || []).map(it => `${it.name} ×${it.quantity}`).join(', ');
+  // Les entrées piscine ont leur propre module : on les exclut de la liste des ventes
+  const isPiscineSale = (s) => (s.items || []).some(it => it.id === 'piscine' || it.name === 'Accès Piscine');
 
   const sortedSales = useMemo(() => {
-    const list = [...(sales || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const list = [...(sales || [])]
+      .filter(s => !isPiscineSale(s))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter(s =>
