@@ -9,6 +9,7 @@ import {
     Store,
     Settings,
     Waves,
+    BedDouble,
     ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,7 @@ const Sidebar = ({ currentView, setCurrentView }) => {
         { id: 'pos', label: 'Ventes (POS)', icon: ShoppingCart, roles: ['admin', 'vendeur'] },
         { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire', 'vendeur'] },
         { id: 'piscine', label: 'Piscine', icon: Waves, roles: ['admin', 'gestionnaire', 'vendeur', 'manager', 'piscine'] },
+        { id: 'hebergement', label: 'Hébergement', icon: BedDouble, roles: ['admin', 'gestionnaire', 'manager'] },
         { id: 'reports', label: 'Rapports', icon: BarChart3, roles: ['admin', 'manager'] },
         { id: 'users', label: 'Utilisateurs', icon: Users, roles: ['admin'] },
     ];
