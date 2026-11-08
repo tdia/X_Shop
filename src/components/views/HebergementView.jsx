@@ -30,6 +30,13 @@ const addDays = (dateStr, days) => {
   d.setDate(d.getDate() + (parseInt(days) || 0));
   return d.toISOString().slice(0, 10);
 };
+// Nombre de nuits/jours entre deux dates (min 1)
+const daysBetween = (start, end) => {
+  if (!start || !end) return 1;
+  const ms = new Date(end) - new Date(start);
+  const d = Math.round(ms / 86400000);
+  return d >= 1 ? d : 1;
+};
 
 const HebergementView = ({
   units = [], rentals = [],
@@ -71,13 +78,14 @@ const HebergementView = ({
     setRenting(unit);
     setRentForm({
       startDate: today,
-      duration: 1,
+      endDate: addDays(today, 1),
       customerName: '',
       customerPhone: '',
       paymentStatus: 'paid'
     });
   };
-  const rentTotal = renting && rentForm ? (renting.price || 0) * (parseInt(rentForm.duration) || 1) : 0;
+  const rentDuration = rentForm ? daysBetween(rentForm.startDate, rentForm.endDate) : 1;
+  const rentTotal = renting && rentForm ? (renting.price || 0) * rentDuration : 0;
 
   const confirmRent = async () => {
     if (!renting || !rentForm) return;
@@ -85,9 +93,13 @@ const HebergementView = ({
       setFlash({ type: 'warn', msg: 'Le nom du client est requis pour une location.' });
       return;
     }
+    if (new Date(rentForm.endDate) <= new Date(rentForm.startDate)) {
+      setFlash({ type: 'warn', msg: 'La date de fin doit être après la date de début.' });
+      return;
+    }
     setBusy(true);
     try {
-      const dur = Math.max(1, parseInt(rentForm.duration) || 1);
+      const dur = daysBetween(rentForm.startDate, rentForm.endDate);
       await addRental({
         unitId: renting.id,
         unitName: renting.name,
@@ -95,7 +107,7 @@ const HebergementView = ({
         unitPrice: renting.price,
         duration: dur,
         startDate: rentForm.startDate,
-        endDate: addDays(rentForm.startDate, dur),
+        endDate: rentForm.endDate,
         total: (renting.price || 0) * dur,
         customerName: rentForm.customerName.trim(),
         customerPhone: rentForm.customerPhone.trim() || null,
@@ -294,11 +306,17 @@ const HebergementView = ({
               </label>
               <label>
                 <span>Date de début</span>
-                <input type="date" value={rentForm.startDate} onChange={e => setRentForm({ ...rentForm, startDate: e.target.value })} />
+                <input type="date" value={rentForm.startDate}
+                  onChange={e => {
+                    const start = e.target.value;
+                    const end = (new Date(rentForm.endDate) <= new Date(start)) ? addDays(start, 1) : rentForm.endDate;
+                    setRentForm({ ...rentForm, startDate: start, endDate: end });
+                  }} />
               </label>
               <label>
-                <span>Durée ({TYPES[renting.type]?.durLabel})</span>
-                <input type="number" min="1" value={rentForm.duration} onChange={e => setRentForm({ ...rentForm, duration: e.target.value })} />
+                <span>Date de fin</span>
+                <input type="date" value={rentForm.endDate} min={addDays(rentForm.startDate, 1)}
+                  onChange={e => setRentForm({ ...rentForm, endDate: e.target.value })} />
               </label>
               <label className="full">
                 <span>Statut de paiement</span>
@@ -311,7 +329,7 @@ const HebergementView = ({
             </div>
 
             <div className="h-total">
-              <span>Total ({rentForm.duration} {TYPES[renting.type]?.durLabel} · fin le {addDays(rentForm.startDate, rentForm.duration)})</span>
+              <span>Total ({rentDuration} {TYPES[renting.type]?.durLabel} · du {rentForm.startDate} au {rentForm.endDate})</span>
               <strong>{fmt(rentTotal)} F CFA</strong>
             </div>
 
