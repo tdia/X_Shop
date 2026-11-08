@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Variables d_env locales (cle publique deja en secours dans le code)
+.env
