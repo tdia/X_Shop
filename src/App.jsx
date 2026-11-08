@@ -9,6 +9,7 @@ import LoginView from './components/views/LoginView';
 import UserManagementView from './components/views/UserManagementView';
 import SettingsView from './components/views/SettingsView';
 import PiscineView from './components/views/PiscineView';
+import HebergementView from './components/views/HebergementView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './services/api';
 import './App.css';
@@ -18,16 +19,22 @@ function AppContent() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [rentalUnits, setRentalUnits] = useState([]);
+  const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const [productsData, salesData] = await Promise.all([
+      const [productsData, salesData, unitsData, rentalsData] = await Promise.all([
         api.getProducts(),
-        api.getSales()
+        api.getSales(),
+        api.getRentalUnits(),
+        api.getRentals()
       ]);
       setProducts(productsData);
       setSales(salesData);
+      setRentalUnits(unitsData);
+      setRentals(rentalsData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -45,17 +52,20 @@ function AppContent() {
   useEffect(() => {
     if (!user) return;
     const restrictedViews = {
-      vendeur: ['dashboard', 'reports', 'users', 'settings'],
+      vendeur: ['dashboard', 'reports', 'users', 'settings', 'hebergement'],
       manager: ['pos', 'inventory', 'users', 'settings'],
       gestionnaire: ['users', 'settings'],
       // L'agent piscine n'accède qu'au module Piscine
-      piscine: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings']
+      piscine: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings', 'hebergement'],
+      // L'agent hébergement n'accède qu'au module Hébergement
+      hebergement: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings', 'piscine']
     };
 
     if (restrictedViews[user.role]?.includes(currentView)) {
       if (user.role === 'vendeur') setCurrentView('pos');
       else if (user.role === 'manager') setCurrentView('reports');
       else if (user.role === 'piscine') setCurrentView('piscine');
+      else if (user.role === 'hebergement') setCurrentView('hebergement');
       else setCurrentView('dashboard');
     }
   }, [user, currentView]);
@@ -92,6 +102,18 @@ function AppContent() {
     setSales(sales.map(s => s.id === id ? { ...s, ...updated } : s));
     return updated;
   };
+
+  // --- Hébergement : unités & locations ---
+  const refreshHebergement = async () => {
+    const [unitsData, rentalsData] = await Promise.all([api.getRentalUnits(), api.getRentals()]);
+    setRentalUnits(unitsData);
+    setRentals(rentalsData);
+  };
+  const addRentalUnit = async (data) => { await api.addRentalUnit(data); await refreshHebergement(); };
+  const updateRentalUnit = async (id, data) => { await api.updateRentalUnit(id, data); await refreshHebergement(); };
+  const deleteRentalUnit = async (id) => { await api.deleteRentalUnit(id); await refreshHebergement(); };
+  const addRental = async (data) => { const r = await api.addRental(data); await refreshHebergement(); return r; };
+  const checkoutRental = async (id) => { await api.checkoutRental(id); await refreshHebergement(); };
 
   const addProduct = async (productData) => {
     const newProduct = await api.addProduct(productData);
@@ -146,6 +168,19 @@ function AppContent() {
             sales={sales}
             onSale={addSale}
             canEditPrice={['admin', 'gestionnaire'].includes(user.role)}
+          />
+        );
+      case 'hebergement':
+        return (
+          <HebergementView
+            units={rentalUnits}
+            rentals={rentals}
+            addRental={addRental}
+            checkoutRental={checkoutRental}
+            addUnit={addRentalUnit}
+            updateUnit={updateRentalUnit}
+            deleteUnit={deleteRentalUnit}
+            canManage={['admin', 'gestionnaire'].includes(user.role)}
           />
         );
       case 'users':
