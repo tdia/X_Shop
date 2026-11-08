@@ -8,6 +8,7 @@ import ReportsView from './components/views/ReportsView';
 import LoginView from './components/views/LoginView';
 import UserManagementView from './components/views/UserManagementView';
 import SettingsView from './components/views/SettingsView';
+import PiscineView from './components/views/PiscineView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './services/api';
 import './App.css';
@@ -62,10 +63,10 @@ function AppContent() {
     return <LoginView />;
   }
 
-  const addSale = async (cartItems) => {
+  const addSale = async (cartItems, meta = {}) => {
     const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     try {
-      const newSale = await api.addSale({ items: cartItems, total });
+      const newSale = await api.addSale({ items: cartItems, total, ...meta });
       setSales([newSale, ...sales]);
 
       // Update local products stock
@@ -134,6 +135,14 @@ function AppContent() {
             sales={sales}
             updateSale={updateSale}
             canEdit={['admin', 'gestionnaire'].includes(user.role)}
+          />
+        );
+      case 'piscine':
+        return (
+          <PiscineView
+            sales={sales}
+            onSale={addSale}
+            canEditPrice={['admin', 'gestionnaire'].includes(user.role)}
           />
         );
       case 'users':
