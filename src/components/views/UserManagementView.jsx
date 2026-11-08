@@ -16,7 +16,8 @@ import {
     Users as UsersIcon,
     CheckCircle2,
     Lock,
-    Search
+    Search,
+    Waves
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,7 +37,8 @@ const UserManagementView = () => {
         { value: 'admin', label: 'Administrateur', desc: 'Contrôle total du système', icon: <ShieldCheck size={18} />, color: '#4f46e5' },
         { value: 'gestionnaire', label: 'Gestionnaire', desc: 'Stocks et inventaires', icon: <Shield size={18} />, color: '#10b981' },
         { value: 'vendeur', label: 'Vendeur', desc: 'Interface de caisse/POS', icon: <UserIcon size={18} />, color: '#f59e0b' },
-        { value: 'manager', label: 'Manager', desc: 'Rapports et statistiques', icon: <UserCircle size={18} />, color: '#8b5cf6' }
+        { value: 'manager', label: 'Manager', desc: 'Rapports et statistiques', icon: <UserCircle size={18} />, color: '#8b5cf6' },
+        { value: 'piscine', label: 'Agent Piscine', desc: 'Accès au module Piscine uniquement', icon: <Waves size={18} />, color: '#0ea5e9' }
     ];
 
     const filteredUsers = users.filter(u =>
@@ -346,6 +348,7 @@ const UserManagementView = () => {
                 .role-pill-elite.gestionnaire { color: #059669; background: #ecfdf5; }
                 .role-pill-elite.vendeur { color: #d97706; background: #fffbeb; }
                 .role-pill-elite.manager { color: #7c3aed; background: #f5f3ff; }
+                .role-pill-elite.piscine { color: #0284c7; background: #e0f2fe; }
 
                 .status-indicator-lite { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: #10b981; }
                 .success-icon { color: #10b981; }
