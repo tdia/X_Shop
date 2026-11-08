@@ -47,12 +47,15 @@ function AppContent() {
     const restrictedViews = {
       vendeur: ['dashboard', 'reports', 'users', 'settings'],
       manager: ['pos', 'inventory', 'users', 'settings'],
-      gestionnaire: ['users', 'settings']
+      gestionnaire: ['users', 'settings'],
+      // L'agent piscine n'accède qu'au module Piscine
+      piscine: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings']
     };
 
     if (restrictedViews[user.role]?.includes(currentView)) {
       if (user.role === 'vendeur') setCurrentView('pos');
       else if (user.role === 'manager') setCurrentView('reports');
+      else if (user.role === 'piscine') setCurrentView('piscine');
       else setCurrentView('dashboard');
     }
   }, [user, currentView]);

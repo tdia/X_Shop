@@ -21,7 +21,7 @@ const Sidebar = ({ currentView, setCurrentView }) => {
         { id: 'dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, roles: ['admin', 'gestionnaire', 'manager'] },
         { id: 'pos', label: 'Ventes (POS)', icon: ShoppingCart, roles: ['admin', 'vendeur'] },
         { id: 'inventory', label: 'Inventaire', icon: Package, roles: ['admin', 'gestionnaire', 'vendeur'] },
-        { id: 'piscine', label: 'Piscine', icon: Waves, roles: ['admin', 'gestionnaire', 'vendeur', 'manager'] },
+        { id: 'piscine', label: 'Piscine', icon: Waves, roles: ['admin', 'gestionnaire', 'vendeur', 'manager', 'piscine'] },
         { id: 'reports', label: 'Rapports', icon: BarChart3, roles: ['admin', 'manager'] },
         { id: 'users', label: 'Utilisateurs', icon: Users, roles: ['admin'] },
     ];
