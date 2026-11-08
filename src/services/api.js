@@ -279,7 +279,13 @@ const api = {
       exec('UPDATE products SET stock = MAX(0, stock - ?) WHERE id=?', [item.quantity, item.id]);
     });
     await persist();
-    return { id, items, total: saleData.total || 0, timestamp, paymentStatus: saleData.paymentStatus || 'paid' };
+    return {
+      id, items, total: saleData.total || 0, timestamp,
+      paidAmount: saleData.paidAmount != null ? saleData.paidAmount : (saleData.total || 0),
+      paymentStatus: saleData.paymentStatus || 'paid',
+      customerName: saleData.customerName || null,
+      customerPhone: saleData.customerPhone || null
+    };
   },
   updateSale: async (id, saleData) => {
     await ready;
@@ -291,6 +297,19 @@ const api = {
     await persist();
     const updated = one('SELECT * FROM sales WHERE id=?', [id]);
     return { ...updated, items: JSON.parse(updated.items || '[]') };
+  },
+
+  // Réglages dynamiques (table meta : prix piscine, etc.)
+  getSetting: async (key, defaultValue = null) => {
+    await ready;
+    const v = getMeta(key);
+    return v == null ? defaultValue : v;
+  },
+  setSetting: async (key, value) => {
+    await ready;
+    setMeta(key, value);
+    await persist();
+    return value;
   }
 };
 
