@@ -56,13 +56,16 @@ function AppContent() {
       manager: ['pos', 'inventory', 'users', 'settings'],
       gestionnaire: ['users', 'settings'],
       // L'agent piscine n'accède qu'au module Piscine
-      piscine: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings', 'hebergement']
+      piscine: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings', 'hebergement'],
+      // L'agent hébergement n'accède qu'au module Hébergement
+      hebergement: ['dashboard', 'pos', 'inventory', 'reports', 'users', 'settings', 'piscine']
     };
 
     if (restrictedViews[user.role]?.includes(currentView)) {
       if (user.role === 'vendeur') setCurrentView('pos');
       else if (user.role === 'manager') setCurrentView('reports');
       else if (user.role === 'piscine') setCurrentView('piscine');
+      else if (user.role === 'hebergement') setCurrentView('hebergement');
       else setCurrentView('dashboard');
     }
   }, [user, currentView]);
