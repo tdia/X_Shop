@@ -10,6 +10,7 @@ import UserManagementView from './components/views/UserManagementView';
 import SettingsView from './components/views/SettingsView';
 import PiscineView from './components/views/PiscineView';
 import HebergementView from './components/views/HebergementView';
+import InstallButton from './components/InstallButton';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './services/api';
 import './App.css';
@@ -212,6 +213,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <InstallButton />
     </AuthProvider>
   );
 }
