@@ -9,10 +9,12 @@ import {
   Tag,
   Save,
   CheckCircle2,
-  User
+  User,
+  Printer
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
+import Receipt from '../Receipt';
 
 const PISCINE_ITEM_ID = 'piscine';
 const PISCINE_ITEM_NAME = 'Accès Piscine';
@@ -33,6 +35,7 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
   const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
   const [flash, setFlash] = useState(null);
+  const [ticket, setTicket] = useState(null);
 
   // Charge le prix dynamique depuis la base
   useEffect(() => {
@@ -90,10 +93,11 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
         quantity: qty,
         image: '🏊'
       };
-      await onSale([item], { customerName: customerName.trim() || null });
+      const sale = await onSale([item], { customerName: customerName.trim() || null });
       setFlash({ type: 'ok', msg: `Entrée enregistrée : ${qty} personne(s) — ${fmt(price * qty)} F CFA.` });
       setPersons(1);
       setCustomerName('');
+      if (sale) setTicket(sale); // ouvre l'impression du ticket
     } catch (e) {
       setFlash({ type: 'warn', msg: "Erreur lors de l'enregistrement de l'entrée." });
     } finally {
@@ -215,6 +219,9 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
                       <span>{s.customerName || 'Client anonyme'}</span>
                     </div>
                     <div className="p-row-total">{fmt(s.total)} F CFA</div>
+                    <button className="p-print" title="Imprimer le ticket" onClick={() => setTicket(s)}>
+                      <Printer size={16} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -222,6 +229,8 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
           </div>
         </div>
       </div>
+
+      {ticket && <Receipt sale={ticket} onClose={() => setTicket(null)} />}
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -283,6 +292,8 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
         .p-row-main strong { font-weight: 800; color: var(--text-primary); }
         .p-row-main span { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
         .p-row-total { font-weight: 800; color: var(--text-primary); white-space: nowrap; }
+        .p-print { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--primary-light); color: var(--primary); flex-shrink: 0; }
+        .p-print:hover { background: var(--primary); color: #fff; }
 
         @media (max-width: 1100px) {
           .piscine-grid { grid-template-columns: 1fr; }
