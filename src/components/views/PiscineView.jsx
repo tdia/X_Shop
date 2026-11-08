@@ -10,7 +10,10 @@ import {
   Save,
   CheckCircle2,
   User,
-  Printer
+  Printer,
+  Download,
+  FileText,
+  Calendar
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
@@ -36,6 +39,7 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
   const [saving, setSaving] = useState(false);
   const [flash, setFlash] = useState(null);
   const [ticket, setTicket] = useState(null);
+  const [reportPeriod, setReportPeriod] = useState('daily');
 
   // Charge le prix dynamique depuis la base
   useEffect(() => {
@@ -69,6 +73,152 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
     });
     return { entries, people, revenue };
   }, [todaySales]);
+
+  // Toutes les entrées piscine (tous jours confondus)
+  const allPiscine = useMemo(
+    () => sales
+      .filter(isPiscineSale)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
+    [sales]
+  );
+
+  // Agrégation par période (journalier : 7 jours / mensuel : 6 mois)
+  const periodRows = useMemo(() => {
+    const agg = (list) => list.reduce(
+      (acc, s) => {
+        acc.entries += 1;
+        acc.people += piscinePersons(s);
+        acc.revenue += s.total || 0;
+        return acc;
+      },
+      { entries: 0, people: 0, revenue: 0 }
+    );
+    const rows = [];
+    if (reportPeriod === 'daily') {
+      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const ds = d.toISOString().slice(0, 10);
+        const list = allPiscine.filter(s => (s.timestamp || '').startsWith(ds));
+        rows.push({ label: `${days[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`, ...agg(list) });
+      }
+    } else {
+      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const list = allPiscine.filter(s => {
+          const sd = new Date(s.timestamp);
+          return sd.getMonth() === d.getMonth() && sd.getFullYear() === d.getFullYear();
+        });
+        rows.push({ label: `${months[d.getMonth()]} ${d.getFullYear()}`, ...agg(list) });
+      }
+    }
+    return rows;
+  }, [allPiscine, reportPeriod]);
+
+  const periodTotals = useMemo(
+    () => periodRows.reduce(
+      (a, r) => ({ entries: a.entries + r.entries, people: a.people + r.people, revenue: a.revenue + r.revenue }),
+      { entries: 0, people: 0, revenue: 0 }
+    ),
+    [periodRows]
+  );
+
+  // --- Export CSV des entrées piscine ---
+  const csvCell = (v) => {
+    const s = v == null ? '' : String(v);
+    return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const exportCSV = () => {
+    const headers = ['id', 'date', 'heure', 'personnes', 'client', 'telephone', 'total'];
+    const lines = [headers.join(',')];
+    allPiscine.forEach(s => {
+      const d = new Date(s.timestamp);
+      lines.push([
+        s.id,
+        d.toLocaleDateString('fr-FR'),
+        d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        piscinePersons(s),
+        s.customerName || '',
+        s.customerPhone || '',
+        s.total || 0
+      ].map(csvCell).join(','));
+    });
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `entrees-piscine-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setFlash({ type: 'ok', msg: `${allPiscine.length} entrée(s) piscine exportée(s) en CSV.` });
+  };
+
+  // --- Impression du rapport piscine (journalier / mensuel) ---
+  const printReport = () => {
+    const title = reportPeriod === 'daily' ? "Rapport Piscine Journalier" : "Rapport Piscine Mensuel";
+    const rowsHtml = periodRows.filter(r => r.entries > 0).map(r => `
+      <tr>
+        <td>${r.label}</td>
+        <td style="text-align:center">${r.entries}</td>
+        <td style="text-align:center">${r.people}</td>
+        <td style="text-align:right">${fmt(r.revenue)} F CFA</td>
+      </tr>`).join('');
+    const w = window.open('', '_blank');
+    if (!w) {
+      setFlash({ type: 'warn', msg: "Impression bloquée : autorisez les pop-ups." });
+      return;
+    }
+    w.document.write(`
+      <html><head><title>${title} - X-Shop</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family:'Inter',sans-serif; padding:40px; color:#1e293b; }
+        .head { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #0ea5e9; padding-bottom:18px; margin-bottom:28px; }
+        .brand { font-size:26px; font-weight:800; color:#0ea5e9; }
+        .brand small { display:block; font-size:12px; color:#64748b; font-weight:600; }
+        .meta { text-align:right; font-size:12px; color:#64748b; }
+        h2 { text-align:center; text-transform:uppercase; letter-spacing:2px; font-size:16px; margin:0 0 24px; }
+        .cards { display:flex; gap:16px; margin-bottom:26px; }
+        .card { flex:1; background:#f0f9ff; border:1px solid #e0f2fe; border-radius:12px; padding:16px; text-align:center; }
+        .card span { font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase; }
+        .card b { display:block; font-size:20px; color:#0f172a; margin-top:6px; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#0ea5e9; color:#fff; padding:12px; text-align:left; font-size:12px; }
+        th:nth-child(2),th:nth-child(3){ text-align:center; } th:nth-child(4){ text-align:right; }
+        td { padding:11px 12px; border-bottom:1px solid #e2e8f0; font-size:13px; }
+        tr:nth-child(even) td { background:#f8fafc; }
+        .tot td { background:#e0f2fe !important; font-weight:800; }
+        .foot { margin-top:40px; text-align:center; font-size:11px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:16px; }
+        @media print { body { padding:0; } }
+      </style></head><body>
+        <div class="head">
+          <div class="brand">X-SHOP <small>Gestion Piscine</small></div>
+          <div class="meta">Généré le ${new Date().toLocaleString('fr-FR')}</div>
+        </div>
+        <h2>${title}</h2>
+        <div class="cards">
+          <div class="card"><span>Entrées</span><b>${periodTotals.entries}</b></div>
+          <div class="card"><span>Personnes</span><b>${periodTotals.people}</b></div>
+          <div class="card"><span>Recettes</span><b>${fmt(periodTotals.revenue)} F CFA</b></div>
+        </div>
+        <table>
+          <thead><tr><th>${reportPeriod === 'daily' ? 'Jour' : 'Mois'}</th><th>Entrées</th><th>Personnes</th><th>Recettes</th></tr></thead>
+          <tbody>
+            ${rowsHtml || '<tr><td colspan="4" style="text-align:center;color:#94a3b8">Aucune entrée sur la période</td></tr>'}
+            <tr class="tot"><td>TOTAL</td><td style="text-align:center">${periodTotals.entries}</td><td style="text-align:center">${periodTotals.people}</td><td style="text-align:right">${fmt(periodTotals.revenue)} F CFA</td></tr>
+          </tbody>
+        </table>
+        <div class="foot">X-Shop — Module Piscine · Rapport ${reportPeriod === 'daily' ? 'journalier' : 'mensuel'}</div>
+      </body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); w.close(); }, 400);
+  };
 
   const savePrice = async () => {
     const n = parseInt(priceInput);
@@ -230,6 +380,56 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
         </div>
       </div>
 
+      {/* Rapports & Export */}
+      <div className="card-premium piscine-report">
+        <div className="report-head">
+          <h3 className="p-card-title"><FileText size={20} /> Rapport & Export</h3>
+          <div className="report-actions">
+            <div className="period-toggle">
+              <button className={reportPeriod === 'daily' ? 'active' : ''} onClick={() => setReportPeriod('daily')}>Journalier</button>
+              <button className={reportPeriod === 'monthly' ? 'active' : ''} onClick={() => setReportPeriod('monthly')}>Mensuel</button>
+            </div>
+            <button className="rep-btn" onClick={printReport}><Printer size={16} /> Imprimer</button>
+            <button className="rep-btn" onClick={exportCSV}><Download size={16} /> Exporter CSV</button>
+          </div>
+        </div>
+
+        <div className="report-totals">
+          <div><span>Entrées</span><strong>{periodTotals.entries}</strong></div>
+          <div><span>Personnes</span><strong>{periodTotals.people}</strong></div>
+          <div><span>Recettes</span><strong>{fmt(periodTotals.revenue)} F CFA</strong></div>
+        </div>
+
+        <div className="report-table-wrap">
+          <table className="report-table">
+            <thead>
+              <tr>
+                <th>{reportPeriod === 'daily' ? 'Jour' : 'Mois'}</th>
+                <th className="c">Entrées</th>
+                <th className="c">Personnes</th>
+                <th className="r">Recettes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {periodRows.map((r, i) => (
+                <tr key={i} className={r.entries === 0 ? 'muted' : ''}>
+                  <td>{r.label}</td>
+                  <td className="c">{r.entries}</td>
+                  <td className="c">{r.people}</td>
+                  <td className="r">{fmt(r.revenue)} F CFA</td>
+                </tr>
+              ))}
+              <tr className="total-row">
+                <td>TOTAL</td>
+                <td className="c">{periodTotals.entries}</td>
+                <td className="c">{periodTotals.people}</td>
+                <td className="r">{fmt(periodTotals.revenue)} F CFA</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {ticket && <Receipt sale={ticket} onClose={() => setTicket(null)} />}
 
       <style dangerouslySetInnerHTML={{
@@ -295,6 +495,31 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
         .p-print { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--primary-light); color: var(--primary); flex-shrink: 0; }
         .p-print:hover { background: var(--primary); color: #fff; }
 
+        /* Rapport & Export */
+        .piscine-report { padding: 24px 28px; }
+        .report-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+        .report-head .p-card-title { margin-bottom: 0; }
+        .report-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .period-toggle { display: flex; background: var(--bg-main); padding: 4px; border-radius: 12px; gap: 4px; }
+        .period-toggle button { padding: 8px 16px; border-radius: 9px; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+        .period-toggle button.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .rep-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; background: var(--primary-light); color: var(--primary); }
+        .rep-btn:hover { background: var(--primary); color: #fff; }
+
+        .report-totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+        .report-totals > div { background: var(--bg-main); border-radius: 14px; padding: 14px 16px; }
+        .report-totals span { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .report-totals strong { display: block; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
+
+        .report-table-wrap { overflow-x: auto; }
+        .report-table { width: 100%; border-collapse: collapse; }
+        .report-table th { text-align: left; font-size: 0.72rem; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 800; padding: 10px 12px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+        .report-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+        .report-table th.c, .report-table td.c { text-align: center; }
+        .report-table th.r, .report-table td.r { text-align: right; }
+        .report-table tr.muted td { color: var(--text-muted); font-weight: 500; }
+        .report-table tr.total-row td { background: var(--primary-light); font-weight: 800; color: var(--primary); border-bottom: none; }
+
         @media (max-width: 1100px) {
           .piscine-grid { grid-template-columns: 1fr; }
           .piscine-stats { grid-template-columns: 1fr; }
@@ -303,6 +528,10 @@ const PiscineView = ({ sales = [], onSale, canEditPrice = false }) => {
           .piscine-head h2 { font-size: 1.4rem; }
           .price-edit { flex-direction: column; }
           .btn-save-price { justify-content: center; }
+          .report-head { flex-direction: column; align-items: stretch; }
+          .report-actions { justify-content: space-between; }
+          .rep-btn { flex: 1; justify-content: center; }
+          .report-totals { grid-template-columns: 1fr; }
         }
       `}} />
     </div>
