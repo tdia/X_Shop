@@ -38,7 +38,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
     photo: null
   });
 
-  const categories = ['Alimentation', 'Boissons', 'Sandwichs', 'Hygiène', 'Entretien', 'Snacks', 'Épicerie', 'Frais', 'Autres'];
+  const categories = ['Boissons', 'Alimentation', 'Sandwichs', 'Snacks', 'Épicerie', 'Frais', 'Hygiène', 'Entretien', 'Autres'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +60,7 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', category: 'Alimentation', price: '', stock: '', image: '🛒', photo: null });
+      setFormData({ name: '', category: 'Boissons', price: '', stock: '', image: '🛒', photo: null });
     }
     setShowModal(true);
   };
