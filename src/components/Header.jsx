@@ -7,9 +7,11 @@ const Header = ({ currentView }) => {
 
   const titles = {
     dashboard: 'Tableau de Bord',
-    pos: 'Interface de Vente (POS)',
-    inventory: 'Gestion du Stock',
+    pos: 'Point de vente',
+    inventory: 'Gestion du stock',
     reports: 'Rapports d\'Activité',
+    piscine: 'Piscine',
+    hebergement: 'Hébergement',
     users: 'Gestion des Utilisateurs',
     settings: 'Paramètres & Données'
   };
@@ -48,7 +50,7 @@ const Header = ({ currentView }) => {
       <style dangerouslySetInnerHTML={{
         __html: `
         .header-light {
-          height: 100px;
+          height: 84px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -56,10 +58,11 @@ const Header = ({ currentView }) => {
         }
 
         .header-title {
-          font-size: 1.75rem;
+          font-size: 1.45rem;
           font-weight: 800;
           color: var(--text-primary);
-          letter-spacing: -1px;
+          letter-spacing: -0.5px;
+          line-height: 1.2;
         }
 
         .header-subtitle {
