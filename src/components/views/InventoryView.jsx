@@ -551,6 +551,8 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
           max-width: 850px;
           border-radius: 32px;
           padding: 48px;
+          max-height: 92vh;
+          overflow-y: auto;
           box-shadow: 0 40px 100px -20px rgba(0,0,0,0.3);
         }
 
@@ -621,10 +623,13 @@ const InventoryView = ({ products, updateStock, addProduct, updateProduct, delet
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
         @media (max-width: 900px) {
-          .form-sections-grid { grid-template-columns: 1fr; }
+          .form-sections-grid { grid-template-columns: 1fr; gap: 28px; }
           .form-preview-section { display: none; }
           .inventory-top-bar { flex-direction: column; align-items: flex-start; }
           .search-box-premium { max-width: 100%; }
+          .elite-creation-card { padding: 32px; }
+          .creation-header { margin-bottom: 28px; }
+          .creation-footer { padding-top: 24px; }
         }
 
         @media (max-width: 768px) {
