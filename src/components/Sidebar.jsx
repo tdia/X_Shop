@@ -84,18 +84,20 @@ const Sidebar = ({ currentView, setCurrentView }) => {
           border-right: 1px solid var(--border);
           display: flex;
           flex-direction: column;
-          padding: 32px 24px;
+          padding: 28px 20px;
           position: sticky;
           top: 0;
           z-index: 100;
+          overflow: hidden;
         }
 
         .sidebar-brand {
           display: flex;
           align-items: center;
           gap: 12px;
-          margin-bottom: 48px;
+          margin-bottom: 28px;
           padding-left: 8px;
+          flex-shrink: 0;
         }
 
         .brand-logo-wrap {
@@ -118,33 +120,47 @@ const Sidebar = ({ currentView, setCurrentView }) => {
 
         .sidebar-nav {
           flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overflow-x: hidden;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 6px;
+          padding-right: 4px;
+          scrollbar-width: thin;
+          scrollbar-color: var(--border) transparent;
         }
+        .sidebar-nav::-webkit-scrollbar { width: 6px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
 
         .nav-link-light {
           display: flex;
           align-items: center;
-          gap: 16px;
-          padding: 12px 16px;
+          gap: 14px;
+          padding: 11px 14px;
           border-radius: 14px;
           color: var(--text-secondary);
           font-weight: 600;
+          font-size: 0.95rem;
           background: transparent;
           position: relative;
-          transition: all 0.2s;
+          transition: background 0.18s, color 0.18s, transform 0.18s;
+          flex-shrink: 0;
         }
 
         .nav-link-light:hover {
           background: var(--bg-main);
           color: var(--primary);
+          transform: translateX(2px);
         }
 
         .nav-link-light.active {
-          background: var(--primary-light);
-          color: var(--primary);
+          background: var(--grad-primary, var(--primary));
+          color: #fff;
+          font-weight: 700;
+          box-shadow: 0 8px 18px var(--primary-glow);
         }
+        .nav-link-light.active:hover { color: #fff; transform: none; }
 
         .icon-container {
           display: flex;
@@ -152,21 +168,16 @@ const Sidebar = ({ currentView, setCurrentView }) => {
           justify-content: center;
         }
 
-        .active-indicator {
-          position: absolute;
-          left: -24px;
-          width: 4px;
-          height: 20px;
-          background: var(--primary);
-          border-radius: 0 4px 4px 0;
-        }
+        .active-indicator { display: none; }
 
         .sidebar-footer {
-          padding-top: 24px;
+          padding-top: 18px;
+          margin-top: 10px;
           border-top: 1px solid var(--border);
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
+          flex-shrink: 0;
         }
 
         .settings-link {
