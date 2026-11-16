@@ -218,12 +218,13 @@ const Sidebar = ({ currentView, setCurrentView }) => {
           color: white;
         }
 
-        @media (max-width: 1024px) {
-          .x-sidebar-light { width: 88px; padding: 32px 16px; }
-          .brand-name, .label, .settings-link span, .logout-button span { display: none; }
-          .sidebar-brand { justify-content: center; padding: 0; }
-          .nav-link-light { justify-content: center; padding: 16px 0; }
-          .logout-button { justify-content: center; width: 50px; margin: 0 auto; }
+        /* Tablette : menu complet avec libellés, barre un peu plus étroite */
+        @media (max-width: 1024px) and (min-width: 769px) {
+          .x-sidebar-light { width: 230px; padding: 24px 14px; }
+          .sidebar-brand { margin-bottom: 22px; }
+          .brand-name { font-size: 1.3rem; }
+          .nav-link-light { padding: 10px 12px; gap: 12px; font-size: 0.9rem; }
+          .settings-link { padding: 10px 12px; font-size: 0.92rem; }
         }
 
         @media (max-width: 768px) {
