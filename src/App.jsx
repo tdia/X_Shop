@@ -53,7 +53,7 @@ function AppContent() {
   useEffect(() => {
     if (!user) return;
     const restrictedViews = {
-      vendeur: ['dashboard', 'reports', 'users', 'settings', 'hebergement'],
+      vendeur: ['dashboard', 'reports', 'users', 'settings', 'hebergement', 'piscine'],
       manager: ['pos', 'inventory', 'users', 'settings'],
       gestionnaire: ['users', 'settings'],
       // L'agent piscine n'accède qu'au module Piscine
