@@ -364,7 +364,7 @@ const UserManagementView = () => {
 
                 /* Elite Modal Styling */
                 .elite-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 4000; padding: 20px; }
-                .elite-user-modal { background: white; width: 100%; max-width: 900px; padding: 0; border-radius: 32px; overflow: hidden; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.4); }
+                .elite-user-modal { background: white; width: 100%; max-width: 900px; padding: 0; border-radius: 32px; max-height: 92vh; overflow-y: auto; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.4); }
                 
                 .modal-header-elite { padding: 40px; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
                 .header-title-wrap { display: flex; gap: 20px; align-items: center; }
